@@ -1,2 +1,2 @@
 # gograph
-Interact with graphs using golanf
+Interact with graphs using golang
