@@ -3,7 +3,7 @@ FROM ubuntu:latest
 FROM neo4j:4.4.15-community
 
 ### base ###
-apt-get install -yq \
+RUN apt-get install -yq \
         asciidoctor \
         bash-completion \
         build-essential \
