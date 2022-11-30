@@ -3,8 +3,7 @@ FROM ubuntu:latest
 FROM neo4j:4.4.15-community
 
 ### base ###
-RUN yes | unminimize \
-    && apt-get install -yq \
+apt-get install -yq \
         asciidoctor \
         bash-completion \
         build-essential \
@@ -95,3 +94,4 @@ RUN wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add 
 
 ## set neo4j environment variable
 ENV NEO4J_AUTH=neo4j/test
+
