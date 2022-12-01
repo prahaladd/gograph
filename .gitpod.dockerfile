@@ -1,7 +1,5 @@
 FROM ubuntu:latest
 
-FROM neo4j:4.4.15-community
-
 ### base ###
 RUN apt-get install -yq \
         asciidoctor \
