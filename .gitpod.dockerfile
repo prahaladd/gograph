@@ -1,7 +1,8 @@
 FROM ubuntu:latest
 
 ### base ###
-RUN apt-get install -yq \
+RUN yes | unminimize \
+    && apt-get install -yq \
         asciidoctor \
         bash-completion \
         build-essential \
@@ -68,27 +69,11 @@ RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.t
 ENV GOPATH=/workspace:$GOPATH \
     PATH=/workspace/bin:$PATH
 
-
-### Install Java
-RUN bash -c ". /home/gitpod/.sdkman/bin/sdkman-init.sh && \
-    sdk install java 18.0.2-open && \
-    sdk default java 18.0.2-open"
-
-
 ### checks ###
 # no root-owned files in the home directory
 RUN notOwnedFile=$(find . -not "(" -user gitpod -and -group gitpod ")" -print -quit) \
     && { [ -z "$notOwnedFile" ] \
         || { echo "Error: not all files/dirs in $HOME are owned by 'gitpod' user & group"; exit 1; } }
-
-
-## Install Neo4J latest version
-RUN wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && \
-	echo 'deb https://debian.neo4j.com stable latest' | sudo tee /etc/apt/sources.list.d/neo4j.list && \
-	apt-get update && \
-	apt-get install neo4j
-
-
 
 ## set neo4j environment variable
 ENV NEO4J_AUTH=neo4j/test
