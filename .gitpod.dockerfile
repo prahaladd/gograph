@@ -16,6 +16,8 @@ RUN yes | unminimize \
         software-properties-common \
         sudo \
         vim \
+        curl \
+        git \
     && locale-gen en_US.UTF-8 \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/*
 ENV LANG=en_US.UTF-8
@@ -48,23 +50,23 @@ ENV GO_VERSION=1.19.3 \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar -xzv \
-    && go get -u -v \
-        github.com/acroca/go-symbols \
-        github.com/cweill/gotests/... \
-        github.com/davidrjenni/reftools/cmd/fillstruct \
-        github.com/fatih/gomodifytags \
-        github.com/haya14busa/goplay/cmd/goplay \
-        github.com/josharian/impl \
-        github.com/nsf/gocode \
-        github.com/ramya-rao-a/go-outline \
-        github.com/rogpeppe/godef \
-        github.com/uudashr/gopkgs/cmd/gopkgs \
-        github.com/zmb3/gogetdoc \
-        golang.org/x/lint/golint \
-        golang.org/x/tools/cmd/godoc \
-        golang.org/x/tools/cmd/gorename \
-        golang.org/x/tools/cmd/guru \
-        sourcegraph.com/sqs/goreturns
+    && go install -v \
+        github.com/acroca/go-symbols@latest \
+        github.com/cweill/gotests/...@latest \
+        github.com/davidrjenni/reftools/cmd/fillstruct@latest \
+        github.com/fatih/gomodifytags@latest \
+        github.com/haya14busa/goplay/cmd/goplay@latest \
+        github.com/josharian/impl@latest \
+        github.com/nsf/gocode@latest \
+        github.com/ramya-rao-a/go-outline@latest \
+        github.com/rogpeppe/godef@latest \
+        github.com/uudashr/gopkgs/cmd/gopkgs@latest \
+        github.com/zmb3/gogetdoc@latest \
+        golang.org/x/lint/golint@latest \
+        golang.org/x/tools/cmd/godoc@latest \
+        golang.org/x/tools/cmd/gorename@latest \
+        golang.org/x/tools/cmd/guru@latest \
+        sourcegraph.com/sqs/goreturns@latest
 # user Go packages
 ENV GOPATH=/workspace:$GOPATH \
     PATH=/workspace/bin:$PATH
