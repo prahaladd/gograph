@@ -49,24 +49,24 @@ ENV GO_VERSION=1.19.3 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+ENV GOPROXY=direct
 RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar -xzv \
-    && go install -v \
-        github.com/acroca/go-symbols@latest \
-        github.com/cweill/gotests/...@latest \
-        github.com/davidrjenni/reftools/cmd/fillstruct@latest \
-        github.com/fatih/gomodifytags@latest \
-        github.com/haya14busa/goplay/cmd/goplay@latest \
-        github.com/josharian/impl@latest \
-        github.com/nsf/gocode@latest \
-        github.com/ramya-rao-a/go-outline@latest \
-        github.com/rogpeppe/godef@latest \
-        github.com/uudashr/gopkgs/cmd/gopkgs@latest \
-        github.com/zmb3/gogetdoc@latest \
-        golang.org/x/lint/golint@latest \
-        golang.org/x/tools/cmd/godoc@latest \
-        golang.org/x/tools/cmd/gorename@latest \
-        golang.org/x/tools/cmd/guru@latest \
-        sourcegraph.com/sqs/goreturns@latest
+    && echo "Go version: $(go version)" && go install -v github.com/acroca/go-symbols@latest \
+            && go install -v github.com/cweill/gotests/gotests@latest \
+            && go install -v github.com/davidrjenni/reftools/cmd/fillstruct@latest \
+            && go install -v github.com/fatih/gomodifytags@latest \
+            && go install -v github.com/haya14busa/goplay/cmd/goplay@latest \
+            && go install -v github.com/josharian/impl@latest \
+            && go install -v github.com/nsf/gocode@latest \
+            && go install -v github.com/ramya-rao-a/go-outline@latest \
+            && go install -v github.com/rogpeppe/godef@latest \
+            && go install -v github.com/zmb3/gogetdoc@latest \
+            && go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest \
+            && go install -v golang.org/x/lint/golint@latest \
+            && go install -v golang.org/x/tools/cmd/godoc@latest \
+            && go install -v golang.org/x/tools/cmd/gorename@latest \
+            && go install -v golang.org/x/tools/cmd/guru@latest \
+            && go install -v sourcegraph.com/sqs/goreturns@latest
 # user Go packages
 ENV GOPATH=/workspace:$GOPATH \
     PATH=/workspace/bin:$PATH
@@ -80,3 +80,10 @@ RUN notOwnedFile=$(find . -not "(" -user gitpod -and -group gitpod ")" -print -q
 ## set neo4j environment variable
 ENV NEO4J_AUTH=neo4j/test
 
+# install Neo4J after importing the public key from the keyserver
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 59D700E4D37F5F19 \
+    && curl -fsSL https://debian.neo4j.com/neotechnology.gpg.key |sudo gpg --dearmor -o /usr/share/keyrings/neo4j.gpg \
+    && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list \
+    && sudo add-apt-repository universe \
+    && sudo apt-get update \
+    && sudo apt-get install -y neo4j
