@@ -1,7 +1,7 @@
 # List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
 tasks:
-  - init: echo 'init script' # runs during prebuild
-    command: echo 'start script'
+  - init: sudo update-java-alternatives --jre -s  java-1.19.0-openjdk-amd64
+    command: sudo neo4j start
 
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
