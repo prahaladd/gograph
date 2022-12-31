@@ -39,17 +39,17 @@ type GraphElement interface {
 
 // Vertex represents a vertex within the graph
 type Vertex struct {
-	ID         Identifier
-	Label      string
+	ID         *Identifier
+	Labels     []string
 	Properties KVMap
 }
 
 // Edge represents an edge within the graph
 type Edge struct {
-	ID                  Identifier
-	Label               string
-	SourceVertexID      Identifier
-	DestinationVertexID Identifier
+	ID                  *Identifier
+	Type                string
+	SourceVertexID      *Identifier
+	DestinationVertexID *Identifier
 	Properties          KVMap
 }
 
@@ -68,6 +68,18 @@ const (
 	Write
 )
 
+type EdgeFetchMode int8
+
+const (
+	EdgeWithVertexIds = iota
+	EdgeWithCompleteVertex
+)
+
+// QueryOptions is used to control the aspects of building and routing the final cypher query to be sent to the graph db.
+type QueryOptions struct {
+	options KVMap
+}
+
 // Connection interface represents the contracts to be satisfied by individual connection implementations
 type Connection interface {
 
@@ -76,8 +88,19 @@ type Connection interface {
 	// selectors are required to "select" a particular node within the graph. If selectors are not specified, then all nodes in the graph
 	// with the specified label woould be selected.
 	//
-	// filters are used filter out the results from the set of selected nodes
-	QueryVertex(ctx context.Context, label string, selectors, filters map[string]interface{}) ([]*Vertex, error)
+	// filters are used to filter out the results from the set of selected nodes
+	QueryVertex(ctx context.Context, label string, selectors, filters, queryParams KVMap) ([]*Vertex, error)
+
+	// QueryEdge returns a set of edges for the specified label
+	//
+	// selctors are required to select a particular relationship within the graph. If selectors are not specified, then all edges in the graph
+	// with the specified labels would be selected
+	//
+	// filters are used to filter out the results from the set of selected edges
+	//
+	// The level of detail about the start and end nodes of an edge  can be controled by the fetch mode. Currently, the library
+	// supports returning edges where-in the ids of the start and end vertices of the relations are available.
+	QueryEdge(ctx context.Context, startVertexLabel, endVertexLabel []string, label string, startVertexSelectors, endVertexSelectors, selectors KVMap, startVertexFilters, endVertexFilters, filters KVMap, queryParams KVMap, fetchMode EdgeFetchMode) ([]*Edge, error)
 
 	// ExecuteReadQuery executes a query and transforms the native result set obtained from the DB to a QueryResult using the specified transform function
 	//

@@ -9,6 +9,7 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/prahaladd/gograph/core"
+	"github.com/prahaladd/gograph/query/cypher"
 )
 
 const (
@@ -22,10 +23,19 @@ type Neo4jConnection struct {
 	driver neo4j.DriverWithContext
 }
 
-func (neo *Neo4jConnection) QueryVertex(ctx context.Context, label string, selectors, filters map[string]interface{}) ([]*core.Vertex, error) {
-	selectorString := neo.buildVertexFilters(selectors)
-	query := fmt.Sprintf("match (v:%s%s) return v", label, selectorString)
-	qr, err := neo.ExecuteQuery(ctx, query, core.Read, filters)
+func (neo *Neo4jConnection) QueryVertex(ctx context.Context, label string, selectors, filters, queryParams core.KVMap) ([]*core.Vertex, error) {
+
+	vqb := cypher.NewVertexQueryBuilder()
+	vqb.SetQueryMode(core.Read)
+	vqb.SetLabel([]string{label})
+	vqb.SetSelector(selectors)
+	vqb.SetFilters(filters)
+	vqb.SetVarName("v")
+	query, err := vqb.Build()
+	if err != nil {
+		return nil, err
+	}
+	qr, err := neo.ExecuteQuery(ctx, query, core.Read, queryParams)
 	if err != nil {
 		return nil, err
 	}
@@ -33,16 +43,56 @@ func (neo *Neo4jConnection) QueryVertex(ctx context.Context, label string, selec
 	for _, row := range qr.Rows {
 		v := core.Vertex{}
 		v.Properties = make(core.KVMap)
-		v.Label = label
 		node := row["v"].(neo4j.Node)
-		v.ID = *core.NewId(node.ElementId)
-
+		v.Labels = append(v.Labels, node.Labels...)
+		v.ID = core.NewId(node.ElementId)
 		for key, val := range node.Props {
 			v.Properties[key] = val
 		}
 		vertices = append(vertices, &v)
 	}
 	return vertices, nil
+}
+
+func (neo *Neo4jConnection) QueryEdge(ctx context.Context, startVertexLabel, endVertexLabel []string, label string, startVertexSelectors, endVertexSelectors, selectors core.KVMap, startVertexFilters, endVertexFilters, filters, queryParams core.KVMap, fetchMode core.EdgeFetchMode) ([]*core.Edge, error) {
+	
+	edgeQueryBuilder := cypher.NewEdgeQueryBuilder()
+	edgeQueryBuilder.SetEdgeFetchMode(fetchMode)
+	edgeQueryBuilder.SetStartVertexLabels(startVertexLabel)
+	edgeQueryBuilder.SetEndVertexLabels(endVertexLabel)
+	edgeQueryBuilder.SetLabel([]string{label})
+	edgeQueryBuilder.SetStartVertexSelector(startVertexSelectors)
+	edgeQueryBuilder.SetEndVertexSelector(endVertexSelectors)
+	edgeQueryBuilder.SetSelector(selectors)
+	edgeQueryBuilder.SetStartVertexFilters(startVertexFilters)
+	edgeQueryBuilder.SetEndVertexFilters(endVertexFilters)
+	edgeQueryBuilder.SetFilters(filters)
+	edgeQueryBuilder.SetVariableName("r")
+
+	query, err := edgeQueryBuilder.Build()
+
+	if err != nil {
+		return nil, err
+	}
+	qr, err := neo.ExecuteQuery(ctx, query, core.Read, filters)
+	if err != nil {
+		return nil, err
+	}
+	edges := make([]*core.Edge, 0)
+	for _, row := range qr.Rows {
+		e := core.Edge{}
+		e.Properties = make(core.KVMap)
+		relationship := row["r"].(neo4j.Relationship)
+		e.Type = relationship.Type
+		e.ID = core.NewId(relationship.ElementId)
+		for key, val := range relationship.Props {
+			e.Properties[key] = val
+		}
+		e.SourceVertexID = core.NewId(relationship.StartElementId)
+		e.DestinationVertexID = core.NewId(relationship.EndElementId)
+		edges = append(edges, &e)
+	}
+	return edges, nil
 }
 
 func (neo *Neo4jConnection) ExecuteQuery(ctx context.Context, query string, mode core.QueryMode, queryParams map[string]interface{}) (*core.QueryResult, error) {
@@ -134,7 +184,7 @@ func validateAuthData(auth map[string]interface{}) bool {
 	return userNameFound && pwdFound
 }
 
-func (neo *Neo4jConnection) buildVertexFilters(filters map[string]interface{}) string {
+func (neo *Neo4jConnection) buildSelector(filters map[string]interface{}) string {
 	if filters == nil || len(filters) == 0 {
 		return ""
 	}
