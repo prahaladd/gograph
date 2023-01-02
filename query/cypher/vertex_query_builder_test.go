@@ -29,7 +29,7 @@ func (suite *VertexQueryBuilderTestSuite) TestBuildQuerySingleLabelNoVariable() 
 	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
 	suite.False(mutateClausePresent)
 	suite.True(strings.Contains(query, "la:Label1{name:'TestName'}"))
-	expectedQuery := "MATCH (la:Label1{name:'TestName'}) WHERE la.age=10 return la"
+	expectedQuery := "MATCH (la:Label1{name:'TestName'})  WHERE la.age=10 return la"
 	suite.Equal(expectedQuery, query)
 }
 
@@ -46,7 +46,7 @@ func (suite *VertexQueryBuilderTestSuite) TestBuildQuerySingleLabelVariable() {
 	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
 	suite.False(mutateClausePresent)
 	suite.True(strings.Contains(query, "var:Label1{name:'TestName'}"))
-	expectedQuery := "MATCH (var:Label1{name:'TestName'}) WHERE var.age=10 return var"
+	expectedQuery := "MATCH (var:Label1{name:'TestName'})  WHERE var.age=10 return var"
 	suite.Equal(expectedQuery, query)
 }
 
@@ -62,7 +62,7 @@ func (suite *VertexQueryBuilderTestSuite) TestBuildQueryMultiLabelVariable() {
 	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
 	suite.False(mutateClausePresent)
 	suite.True(strings.Contains(query, "la:Label1:Label2{name:'TestName'}"))
-	expectedQuery := "MATCH (la:Label1:Label2{name:'TestName'}) WHERE la.age=10 return la"
+	expectedQuery := "MATCH (la:Label1:Label2{name:'TestName'})  WHERE la.age=10 return la"
 	suite.Equal(expectedQuery, query)
 }
 
@@ -79,7 +79,7 @@ func (suite *VertexQueryBuilderTestSuite) TestQueryModeWrite() {
 	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
 	suite.True(mutateClausePresent)
 	suite.True(strings.Contains(query, "var:Label1{name:'TestName'}"))
-	expectedQuery := "MERGE (var:Label1{name:'TestName'}) WHERE var.age=10 return var"
+	expectedQuery := "MERGE (var:Label1{name:'TestName'})  WHERE var.age=10 return var"
 	suite.Equal(expectedQuery, query)
 }
 

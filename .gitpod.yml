@@ -9,3 +9,7 @@ ports:
     onOpen: open-preview
 image:
   file: .gitpod.dockerfile
+
+vscode:
+  extensions:
+    - "shd101wyy.markdown-preview-enhanced"
