@@ -6,8 +6,11 @@ The project aims to provide a mechanism to interact with any graph database usin
 
 Advanced functionality APIs can be built upon the core API layer. The small API surface of the core layer allows implementors to provide support for newer graph databases easily.
 
-## Requirements
-Go version 1.18 and above
+## Software Requirements
+* Go version 1.18 and above for code development
+* Connectivity to an instance of a graph database for integration tests.
+
+
 
 ## Source code layout
 | Package Name   | Description   |

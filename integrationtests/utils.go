@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func getFromEnvWithDefault(key, defaultValue string) string {
+func GetFromEnvWithDefault(key, defaultValue string) string {
 	if val, ok := os.LookupEnv(key); ok {
 		return val
 	}
