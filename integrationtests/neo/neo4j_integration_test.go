@@ -41,7 +41,8 @@ func (suite *Neo4JIntegrationTestSuite) SetupTest() {
 	realm := itests.GetFromEnvWithDefault("NEO4J_REALM", defaultRealm)
 	user := itests.GetFromEnvWithDefault("NEO4J_USER", defaultUsername)
 	pwd := itests.GetFromEnvWithDefault("NEO4J_PWD", defaultPassword)
-	connection, err := neo.NewConnection(protocol, host, realm, port, map[string]interface{}{neo.NEO4J_USER_KEY: user, neo.NEO4J_PWD_KEY: pwd}, nil)
+	neo4jConnectionFactory := core.GetConnectorFactory("neo4j")
+	connection, err := neo4jConnectionFactory(protocol, host, realm, port, map[string]interface{}{neo.NEO4J_USER_KEY: user, neo.NEO4J_PWD_KEY: pwd}, nil)
 	suite.connection = connection
 	suite.NoErrorf(err, "error whe setting up Neo4j Test : %v", err)
 	suite.cleanupDB()

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultProtocol = "neo4j"
+	defaultProtocol = "bolt"
 	defaultHost     = "localhost"
 	defaultRealm    = ""
 	defaultUsername = "neo4j"
@@ -27,9 +27,9 @@ type MemgraphIntegrationTestSuite struct {
 }
 
 func (suite *MemgraphIntegrationTestSuite) SetupTest() {
-	protocol := itests.GetFromEnvWithDefault("NEO4J_PROTOCOL", defaultProtocol)
-	host := itests.GetFromEnvWithDefault("NEO4J_HOST", defaultHost)
-	portString := itests.GetFromEnvWithDefault("NEO4J_PORT", "")
+	protocol := itests.GetFromEnvWithDefault("MG_PROTOCOL", defaultProtocol)
+	host := itests.GetFromEnvWithDefault("MG_HOST", defaultHost)
+	portString := itests.GetFromEnvWithDefault("MG_PORT", "")
 
 	var port *int32
 	if len(portString) > 0 {
@@ -39,10 +39,11 @@ func (suite *MemgraphIntegrationTestSuite) SetupTest() {
 		*port = int32(parsedPort)
 	}
 
-	realm := itests.GetFromEnvWithDefault("NEO4J_REALM", defaultRealm)
-	user := itests.GetFromEnvWithDefault("NEO4J_USER", defaultUsername)
-	pwd := itests.GetFromEnvWithDefault("NEO4J_PWD", defaultPassword)
-	connection, err := neo.NewConnection(protocol, host, realm, port, map[string]interface{}{neo.NEO4J_USER_KEY: user, neo.NEO4J_PWD_KEY: pwd}, nil)
+	realm := itests.GetFromEnvWithDefault("MG_REALM", defaultRealm)
+	user := itests.GetFromEnvWithDefault("MG_USER", defaultUsername)
+	pwd := itests.GetFromEnvWithDefault("MG_PWD", defaultPassword)
+	memGraphConnectionFactory := core.GetConnectorFactory("memgraph")
+	connection, err := memGraphConnectionFactory(protocol, host, realm, port, map[string]interface{}{neo.NEO4J_USER_KEY: user, neo.NEO4J_PWD_KEY: pwd}, nil)
 	suite.connection = connection
 	suite.NoErrorf(err, "error whe setting up Neo4j Test : %v", err)
 	suite.cleanupDB()
