@@ -176,6 +176,43 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildMultipleEdgeLabels() {
 	suite.Equal("", queryString)
 }
 
+func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoVertexLabelsAndVars() {
+	suite.edgeQueryBuilder.SetLabel([]string{"label1"}).SetStartVertexVariableName("var1")
+	queryString, err := suite.edgeQueryBuilder.Build()
+	suite.Error(err)
+	suite.Equal("", queryString)
+	suite.edgeQueryBuilder = NewEdgeQueryBuilder()
+	suite.edgeQueryBuilder.SetLabel([]string{"label1"}).SetEndVertexVariableName("var1")
+	queryString, err = suite.edgeQueryBuilder.Build()
+	suite.Error(err)
+	suite.Equal("", queryString)
+}
+
+func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoStartVertexSelectorsAndLabels() {
+	suite.edgeQueryBuilder.SetEdgeFetchMode(core.EdgeWithVertexIds).SetStartVertexVariableName("sv")
+	suite.edgeQueryBuilder.SetLabel([]string{"label1"})
+	suite.edgeQueryBuilder.SetEndVertexLabels([]string{"EndVertex"})
+	suite.edgeQueryBuilder.SetQueryMode(core.Read)
+	suite.edgeQueryBuilder.SetEndVertexSelector(core.KVMap{"TestProperty": "TestValue"})
+	queryString, err := suite.edgeQueryBuilder.Build()
+	suite.NoError(err)
+	expectedQuery := "MATCH (sv)-[la:label1]-(en:EndVertex{TestProperty:'TestValue'})  return la"
+	suite.Equal(expectedQuery, queryString)
+}
+
+func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoEndVertexSelectorsAndLabels() {
+	suite.edgeQueryBuilder.SetEdgeFetchMode(core.EdgeWithVertexIds).SetStartVertexVariableName("sv")
+	suite.edgeQueryBuilder.SetStartVertexSelector(core.KVMap{"TestProperty": "TestValue"})
+
+	suite.edgeQueryBuilder.SetLabel([]string{"label1"})
+	suite.edgeQueryBuilder.SetEndVertexLabels([]string{"EndVertex"})
+	suite.edgeQueryBuilder.SetQueryMode(core.Read)
+	queryString, err := suite.edgeQueryBuilder.Build()
+	suite.NoError(err)
+	expectedQuery := "MATCH (sv{TestProperty:'TestValue'})-[la:label1]-(en:EndVertex)  return la"
+	suite.Equal(expectedQuery, queryString)
+}
+
 func TestEdgeQueryBuilderTestSuite(t *testing.T) {
 	suite.Run(t, new(EdgeQueryBuilderTestSuite))
 }

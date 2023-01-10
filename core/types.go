@@ -28,29 +28,13 @@ type KVMap map[string]interface{}
 // GraphElement defines the interface to be implemented by all elements (Vertices and Edges) of a graph.
 type GraphElement interface {
 	// GetId returns the identifier of the graph element as present in the underlying Graph DBMS
-	GetId() Identifier
+	GetId() *Identifier
 
 	// GetLabel returns the set of labels associated with a Graph element
 	GetLabel() []string
 
 	// GetProperties returns the set of properties associated with the graph element
 	GetProperties() KVMap
-}
-
-// Vertex represents a vertex within the graph
-type Vertex struct {
-	ID         *Identifier
-	Labels     []string
-	Properties KVMap
-}
-
-// Edge represents an edge within the graph
-type Edge struct {
-	ID                  *Identifier
-	Type                string
-	SourceVertexID      *Identifier
-	DestinationVertexID *Identifier
-	Properties          KVMap
 }
 
 // Row is a type alias for a simple KV map and represents a single row of record obtained from the graph db
@@ -121,6 +105,20 @@ type Connection interface {
 	//
 	// updated using an HTTP(s) interface then there is no requirement to close the connection explicitly.
 	Close(ctx context.Context) error
+
+	// StoreVertex stores a vertex to the underlying graph database.
+	//
+	// Upon successful storage, the passed in vertex object's ID field would be set to the ID returned by the database.
+	// Returns an error if there is a failure when persisting the vertex
+	StoreVertex(ctx context.Context, vertex *Vertex) error
+
+	// StoreEdge stores a connected component to the graph database. It can be used to create a new relation
+	// between two vertices or update the properties for an existing relation
+	//
+	// Upon successful storage, the ID field of the participating vertex and edge object are populated
+	// with the DB specific identifier.
+	// Returns an error if there is a failure when persisting the edge
+	StoreEdge(ctx context.Context, edge *Edge) error
 }
 
 // GetConnection returns a connection to a specified graph type.

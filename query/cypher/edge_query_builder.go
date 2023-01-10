@@ -168,6 +168,15 @@ func (eqb *EdgeQueryBuilder) validate() error {
 	if len(eqb.labels) > 1 {
 		return errors.New("multiple edge labels cannot be specified")
 	}
+
+	if len(eqb.startVertexLabels) == 0 && eqb.startVertexVarName == "" {
+		return errors.New("either start vertex label or start vertex variable name must be specified")
+	}
+
+	if len(eqb.endVertexLabels) == 0 && eqb.endVertexVarName == "" {
+		return errors.New("either end vertex label or end vertex variable name must be specified")
+	}
+
 	return nil
 }
 
@@ -187,7 +196,11 @@ func (eqb *EdgeQueryBuilder) buildEdgeQueryFragment() (string, string) {
 }
 
 func (eqb *EdgeQueryBuilder) buildVertexQueryFragment(vertexVarName string, vertexlabels []string, vertexSelector core.KVMap) (string, string) {
-	variableName := strings.ToLower(vertexlabels[0])[0:2]
+	var variableName string
+	if len(vertexlabels) > 0 {
+		variableName = strings.ToLower(vertexlabels[0])[0:2]
+	}
+
 	if vertexVarName != "" {
 		variableName = vertexVarName
 	}
