@@ -8,8 +8,8 @@ Advanced functionality APIs can be built upon the core API layer. The small API 
 
 ## Software Requirements
 * Go version 1.18 and above for code development
+* Docker runtime to execute integration tests
 * Connectivity to an instance of a graph database for integration tests.
-
 
 
 ## Source code layout
@@ -167,6 +167,27 @@ func (suite *Neo4JIntegrationTestSuite) TestStoreOmgStructsAsEdge() {
 	suite.Equal(vc, *vrs[0])
 }
 ```
+
+## Running integration tests
+
+Running integration tests has the following pre-requisites
+- Docker runtime installed on the developer desktop
+- Docker container running the specific graph database service.
+
+Most of the standard well-known graph databases are available as docker container images. Using docker facilitates a uniform test fixture executing environment.
+
+To run integrattion tests run the following command from the project root
+
+```bash
+chmod +x run_all_tests.sh
+./run_all_tests.sh
+```
+
+## Functionality Coverage
+The `gograph` module has been developed and tested on the community editions of the graph databases (currently Neo4J and Memgraph). There are no APIs around additional functionality that is exposed by enterprise editions of these databases.
+
+However for Neo4J, the ability to specify the target database is supported within the Neo4J connector shipped with this module.
+
 
 ## Contributing
 
