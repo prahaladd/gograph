@@ -55,7 +55,7 @@ func buildMultiFilters(multiFilters map[string]map[string]interface{}) string {
 	}
 
 	buffer := bytes.Buffer{}
-	
+
 	firstFilterProcessed := false
 	for k, v := range multiFilters {
 		if len(v) == 0 {
@@ -68,7 +68,7 @@ func buildMultiFilters(multiFilters map[string]map[string]interface{}) string {
 		if firstFilterProcessed {
 			buffer.WriteString(" AND ")
 		}
-		
+
 		buffer.WriteString(buildFilterConditions(k, v))
 		if !firstFilterProcessed {
 			firstFilterProcessed = true

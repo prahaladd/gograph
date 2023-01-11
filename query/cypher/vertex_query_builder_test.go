@@ -89,7 +89,6 @@ func (suite *VertexQueryBuilderTestSuite) TestFiltersMultiple() {
 	suite.queryBuilder.SetSelector(map[string]interface{}{"name": "TestName"})
 	suite.queryBuilder.SetFilters(map[string]interface{}{"age": 10, "name": "TestVertex1"})
 	suite.queryBuilder.SetVarName("var")
-	
 
 	query, err := suite.queryBuilder.Build()
 	suite.NoError(err)
@@ -97,7 +96,7 @@ func (suite *VertexQueryBuilderTestSuite) TestFiltersMultiple() {
 	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
 	suite.True(mutateClausePresent)
 	suite.True(strings.Contains(query, "var:Label1{name:'TestName'}"))
-	
+
 	queryComponents := strings.Split(query, " WHERE ")
 	suite.Equal(2, len(queryComponents))
 	filterString := queryComponents[1]
