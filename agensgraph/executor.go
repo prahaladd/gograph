@@ -17,12 +17,16 @@ type agensContextKey string
 
 // query context constants
 const (
-	// ContextKeyQueryTimeoutSeconds  can be used in context to specify the query timeout in milli-seconds
+	// ContextKeyQueryTimeoutSeconds is used in context to specify the query timeout in milli-seconds
+	// The value of this context parameter is currently ignored
 	ContextKeyQueryTimeoutMillis = agensContextKey("QueryTimeout")
-	// ContextKeyIsolationLevel can be used in context to specify the isolation level for query execution
-	ContextKeyIsolationLevel  = agensContextKey("IsolationLevel")
-	ContextKeyReadOnly        = agensContextKey("ReadOnly")
-	ContextKeyGraphName       = agensContextKey("graphName")
+	// ContextKeyIsolationLevel is used in context to specify the isolation level for query execution
+	ContextKeyIsolationLevel = agensContextKey("IsolationLevel")
+	// ContextKeyReadonly is used to specify if the transaction is read-only
+	ContextKeyReadOnly = agensContextKey("ReadOnly")
+	// ContextKeyGraph name is used to specify the graph against which the operations should be executed
+	ContextKeyGraphName = agensContextKey("graphName")
+	// ContextKeyWriteModeCreate is used to specify if an vertex or edge creation should be done via CREATE instead of a  MERGE
 	ContextKeyWriteModeCreate = agensContextKey("writeModeCreate")
 )
 const (
@@ -43,6 +47,29 @@ type queryOptions struct {
 	writeModeCreate bool
 }
 
+// AgensGraphConnection implements a connection to an [Agensgraph] database.
+// Agensgraph is backed by PostgreSQL and hence the mechanism of obtaining the initial
+// connection is equivalent to connecting to a PostgreSQL instance.
+// Agensgraph stores multiple graphs with a schema created for each defined graph.
+// Hence the graph name must be specified when executing an operation within the context
+// as a string value using the ContextKeyGraphName key.
+//
+// Compared to other graph databases such as Neo4J, Agensgraph does not allow the MERGE
+// operation to create new node or vertex labels. Only CREATE operations can create non-existent
+// labels and corresponding vertex or edge.
+// Hence applications must provide the correct semantics during a write operation on whether
+// the generated cypher query must use CREATE or MERGE clause. By default the write operation
+// would be done using a MERGE. This behavior can be overrriden by specifying a boolean
+// value of true aganst the context key ContextKeyWriteModeCreate
+//
+// Isolation levels can be specified by specifying the correct
+// sql.IsolationLevel valyes against the context key  ContextKeyIsolationLevel key. Defaults
+// to the default isolation provided by the database if not specified
+//
+// Read only transactions can be created by specifying a boolean value of true against
+// the context key ContextKeyReadOnly. Defaults to false.
+//
+// [Agensgraph]: https://github.com/bitnine-oss/agensgraph
 type AgensGraphConnection struct {
 	db *sql.DB
 }

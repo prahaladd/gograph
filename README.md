@@ -11,15 +11,23 @@ Advanced functionality APIs can be built upon the core API layer. The small API 
 * Docker runtime to execute integration tests
 * Connectivity to an instance of a graph database for integration tests.
 
+## Supported Graph databases
+| Database Name | gograph version |
+|---|---|
+| [Neo4J](https://neo4j.com/) | v0.1.0 |
+| [Memgraph](https://memgraph.com/) | v0.1.0 |
+| [Agensgraph](https://github.com/bitnine-oss/agensgraph) | v0.2.0 |
 
 ## Source code layout
 | Package Name   | Description   |
 |---|---|
-|  core | Core `struct` and type definitions. Provides the `Connection` interface to be implemented for providing core graph operations related to query execution|
+|  core | Core `struct` and type definitions. Provides the `Connection` interface to be implemented for providing core graph operations related to query execution |
 | query/cypher | Utility `struct`s for building cypher queries
-| omg | Object Mapped Graph layer that facilitates storage and retrieval of user defined structs as vertices and edges within the graph database
+| omg | Object Mapped Graph layer that facilitates storage and retrieval of user defined structs as vertices and edges within the graph database |
 | neo | [Neo4J](https://neo4j.com/) specific implementation of the `Connection` interface
-| integrationtests | Integration tests to validate core operations on target graph database instances
+| memgraph | [Memgraph](https://memgraph.com/) specific implementation of the `Connection` interface |
+| agensgraph | [Agensgraph](https://github.com/bitnine-oss/agensgraph) specific implementation of the `Connection` interface |
+| integrationtests | Integration tests to validate core operations on target graph database instances |
 
 ## Usage
 
@@ -56,6 +64,27 @@ connection, err := memGraphConnectionFactory(protocol, host, realm, port, map[st
 ```
 It is evident now that the the only place where any database specific information is required is for establishing the initial connection.
 Once a `connection` instance to the target database has been obtained, the rest of the interactions with the graph database would occur through the methods of the `Connection` API and  do not require any database specific knowledge.
+
+The below code snippet from integration tests shows how to obtain an Agensgraph database connection
+
+```go
+host := integrationtests.GetFromEnvWithDefault("AGENS_HOST", "localhost")
+portFromEnv := integrationtests.GetFromEnvWithDefault("AGENS_PORT", "5432")
+portParsed, err := strconv.ParseInt(portFromEnv, 10, 32)
+suite.NoError(err)
+port := new(int32)
+*port = int32(portParsed)
+db := integrationtests.GetFromEnvWithDefault("AGENS_DB", "")
+suite.NotEqual("", db)
+protocol := integrationtests.GetFromEnvWithDefault("AGENS_PROTOCOL", "")
+userName := integrationtests.GetFromEnvWithDefault("AGENS_USER", "")
+suite.NotEqual("", userName)
+pwd := integrationtests.GetFromEnvWithDefault("AGENS_PWD", "")
+suite.NotEqual("", pwd)
+agensConnectionFactory := core.GetConnectorFactory("agens")
+conn, err := agensConnectionFactory(protocol, host, "", port, core.KVMap{agensgraph.AGENS_PASSWD_KEY: pwd, agensgraph.AGENS_USER_KEY: userName}, core.KVMap{agensgraph.AGENS_DBNAME_KEY: db})
+suite.NoError(err)
+```
 
 #### Querying and persisting
 
@@ -184,7 +213,7 @@ chmod +x run_all_tests.sh
 ```
 
 ## Functionality Coverage
-The `gograph` module has been developed and tested on the community editions of the graph databases (currently Neo4J and Memgraph). There are no APIs around additional functionality that is exposed by enterprise editions of these databases.
+The `gograph` module has been developed and tested on the community editions of the graph databases mentioned in supported databases section. There are no APIs around additional functionality that is exposed by enterprise editions of these databases.
 
 However for Neo4J, the ability to specify the target database is supported within the Neo4J connector shipped with this module.
 
