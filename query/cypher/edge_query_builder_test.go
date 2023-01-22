@@ -29,7 +29,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoVarNameEdgeFetchModeIds()
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]-(en:EndVertex{name:'EV1'})  return te"
+	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return te"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -45,7 +45,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoVarNameEdgeFetchModeCompl
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]-(en:EndVertex{name:'EV1'})  return st, te, en"
+	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return st, te, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -62,7 +62,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithVarName() {
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]-(en:EndVertex{name:'EV1'})  return st, r, en"
+	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return st, r, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -79,7 +79,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithMultipleStartVertexLabels()
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex:StartVertex1{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]-(en:EndVertex{name:'EV1'})  return st, r, en"
+	expectedQueryString := "MATCH (st:StartVertex:StartVertex1{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return st, r, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -96,7 +96,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithMultipleEndVertexLabels() {
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]-(en:EndVertex:EndVertex1{name:'EV1'})  return st, r, en"
+	expectedQueryString := "MATCH (st:StartVertex{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]->(en:EndVertex:EndVertex1{name:'EV1'})  return st, r, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -112,10 +112,26 @@ func (suite *EdgeQueryBuilderTestSuite) TestQueryModeWrite() {
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MERGE (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]-(en:EndVertex{name:'EV1'})  return st, te, en"
+	expectedQueryString := "MERGE (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return st, te, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
+func (suite *EdgeQueryBuilderTestSuite) TestQueryModeWriteWithCreate() {
+	suite.edgeQueryBuilder.SetLabel([]string{"TestEdgeLabel"})
+	suite.edgeQueryBuilder.SetStartVertexLabels([]string{"StartVertex"})
+	suite.edgeQueryBuilder.SetEndVertexLabels([]string{"EndVertex"})
+	suite.edgeQueryBuilder.SetQueryMode(core.Write)
+	suite.edgeQueryBuilder.SetStartVertexSelector(core.KVMap{"name": "SV1"})
+	suite.edgeQueryBuilder.SetEndVertexSelector(core.KVMap{"name": "EV1"})
+	suite.edgeQueryBuilder.SetSelector(core.KVMap{"weight": 10})
+	suite.edgeQueryBuilder.SetEdgeFetchMode(core.EdgeWithCompleteVertex)
+	suite.edgeQueryBuilder.SetWriteMode(core.Create)
+
+	queryString, err := suite.edgeQueryBuilder.Build()
+	suite.NoError(err)
+	expectedQueryString := "CREATE (st:StartVertex{name:'SV1'})-[te:TestEdgeLabel{weight: 10}]->(en:EndVertex{name:'EV1'})  return st, te, en"
+	suite.Equal(expectedQueryString, queryString)
+}
 func (suite *EdgeQueryBuilderTestSuite) TestBuildWithMultipleStartAndEndVertexLabels() {
 	suite.edgeQueryBuilder.SetLabel([]string{"TestEdgeLabel"})
 	suite.edgeQueryBuilder.SetStartVertexLabels([]string{"StartVertex", "StartVertex1"})
@@ -129,7 +145,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithMultipleStartAndEndVertexLa
 
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQueryString := "MATCH (st:StartVertex:StartVertex1{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]-(en:EndVertex:EndVertex1{name:'EV1'})  return st, r, en"
+	expectedQueryString := "MATCH (st:StartVertex:StartVertex1{name:'SV1'})-[r:TestEdgeLabel{weight: 10}]->(en:EndVertex:EndVertex1{name:'EV1'})  return st, r, en"
 	suite.Equal(expectedQueryString, queryString)
 }
 
@@ -196,7 +212,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoStartVertexSelectorsAndLa
 	suite.edgeQueryBuilder.SetEndVertexSelector(core.KVMap{"TestProperty": "TestValue"})
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQuery := "MATCH (sv)-[la:label1]-(en:EndVertex{TestProperty:'TestValue'})  return la"
+	expectedQuery := "MATCH (sv)-[la:label1]->(en:EndVertex{TestProperty:'TestValue'})  return la"
 	suite.Equal(expectedQuery, queryString)
 }
 
@@ -209,7 +225,7 @@ func (suite *EdgeQueryBuilderTestSuite) TestBuildWithNoEndVertexSelectorsAndLabe
 	suite.edgeQueryBuilder.SetQueryMode(core.Read)
 	queryString, err := suite.edgeQueryBuilder.Build()
 	suite.NoError(err)
-	expectedQuery := "MATCH (sv{TestProperty:'TestValue'})-[la:label1]-(en:EndVertex)  return la"
+	expectedQuery := "MATCH (sv{TestProperty:'TestValue'})-[la:label1]->(en:EndVertex)  return la"
 	suite.Equal(expectedQuery, queryString)
 }
 

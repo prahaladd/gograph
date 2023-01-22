@@ -2,8 +2,11 @@ package omg
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
+	"strings"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/prahaladd/gograph/core"
 )
 
@@ -150,11 +153,11 @@ func (rm *ReflectionMapper) FromVertex(vertex *core.Vertex, v any) error {
 		} else {
 			finalValue = reflect.ValueOf(v)
 		}
-		rm.performReverseMap(vertex.Properties, reflect.TypeOf(v), reflect.Indirect(finalValue))
+		//rm.performReverseMap(vertex.Properties, reflect.TypeOf(v), reflect.Indirect(finalValue))
+		return rm.performDecode(vertex.Properties, reflect.TypeOf(v), reflect.Indirect(finalValue), v)
 	default:
 		return errors.New("passed in value must be a pointer to a struct type")
 	}
-	return nil
 }
 
 func (rm *ReflectionMapper) FromEdge(edge *core.Edge, v any) error {
@@ -174,11 +177,11 @@ func (rm *ReflectionMapper) FromEdge(edge *core.Edge, v any) error {
 		} else {
 			finalValue = reflect.ValueOf(v)
 		}
-		rm.performReverseMap(edge.Properties, reflect.TypeOf(v), reflect.Indirect(finalValue))
+		err := rm.performDecode(edge.Properties, reflect.TypeOf(v), reflect.Indirect(finalValue), v)
+		return err
 	default:
 		return errors.New("passed in value must be a pointer to a struct type")
 	}
-	return nil
 }
 
 func (rm *ReflectionMapper) performMap(t reflect.Type, val reflect.Value) core.KVMap {
@@ -202,9 +205,56 @@ func (rm *ReflectionMapper) performReverseMap(properties core.KVMap, t reflect.T
 		if t.Field(i).Tag != "" && t.Field(i).Tag.Get(ogmTagSuffix) != "" {
 			val.Field(i).Set(reflect.ValueOf(properties[t.Field(i).Tag.Get(ogmTagSuffix)]))
 		} else {
-			val.Field(i).Set(reflect.ValueOf(properties[t.Field(i).Name]))
+			// TODO: make property name lookup handling more streamlined and configurable
+			// by the caller.
+			// data stores like Agensgraph convert the property name to lower case
+			// and return it as such. In these cases, the reverse lookup would need
+			// to happen in case insensitive manner.
+			if _, ok := properties[t.Field(i).Name]; ok {
+				val.Field(i).Set(reflect.ValueOf(properties[t.Field(i).Name]))
+			} else if _, ok = properties[strings.ToLower(t.Field(i).Name)]; ok {
+				val.Field(i).Set(reflect.ValueOf(properties[strings.ToLower(t.Field(i).Name)]))
+			} else if _, ok := properties[strings.ToUpper(t.Field(i).Name)]; ok {
+				val.Field(i).Set(reflect.ValueOf(properties[strings.ToUpper(t.Field(i).Name)]))
+			} else {
+				// not found - simply continue
+				continue
+			}
+
 		}
 	}
+}
+
+func (rm *ReflectionMapper) performDecode(properties core.KVMap, t reflect.Type, val reflect.Value, v any) error {
+	fieldTagMapping := make(map[string]string)
+	fieldMappingByName := make(map[string]reflect.StructField)
+
+	t = t.Elem()
+	for i := 0; i < val.NumField(); i++ {
+		if t.Field(i).Tag != "" && t.Field(i).Tag.Get(ogmTagSuffix) != "" {
+			fieldTagMapping[t.Field(i).Tag.Get(ogmTagSuffix)] = t.Field(i).Name
+
+		}
+		fieldMappingByName[strings.ToLower(t.Field(i).Name)] = t.Field(i)
+		fieldMappingByName[strings.ToUpper(t.Field(i).Name)] = t.Field(i)
+		fieldMappingByName[t.Field(i).Name] = t.Field(i)
+	}
+	mapToDecode := make(map[string]interface{})
+	for k, v := range properties {
+		fieldToDecode, ok := fieldMappingByName[k]
+		// if the field is not found by name, then check if the key is a tag on a field
+		if !ok {
+			originalFieldName, ok := fieldTagMapping[k]
+			if !ok {
+				return fmt.Errorf("unknown field %s", k)
+			}
+			fieldToDecode = fieldMappingByName[originalFieldName]
+		}
+
+		mapToDecode[fieldToDecode.Name] = v
+	}
+	err := mapstructure.Decode(mapToDecode, v)
+	return err
 }
 
 func NewReflectionMapper() *ReflectionMapper {

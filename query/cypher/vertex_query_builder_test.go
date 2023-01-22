@@ -83,6 +83,25 @@ func (suite *VertexQueryBuilderTestSuite) TestQueryModeWrite() {
 	suite.Equal(expectedQuery, query)
 }
 
+func (suite *VertexQueryBuilderTestSuite) TestQueryModeWriteWithCreate() {
+	suite.queryBuilder.SetLabel([]string{"Label1"})
+	suite.queryBuilder.SetQueryMode(core.Write)
+	suite.queryBuilder.SetSelector(map[string]interface{}{"name": "TestName"})
+	suite.queryBuilder.SetFilters(map[string]interface{}{"age": 10})
+	suite.queryBuilder.SetWriteMode(core.Create)
+	suite.queryBuilder.SetVarName("var")
+
+	query, err := suite.queryBuilder.Build()
+	suite.NoError(err)
+	suite.True(strings.Contains(query, "CREATE"))
+	suite.False(strings.Contains(query, "MERGE"))
+	mutateClausePresent := strings.Contains(query, "MERGE") || strings.Contains(query, "CREATE")
+	suite.True(mutateClausePresent)
+	suite.True(strings.Contains(query, "var:Label1{name:'TestName'}"))
+	expectedQuery := "CREATE (var:Label1{name:'TestName'})  WHERE var.age=10 return var"
+	suite.Equal(expectedQuery, query)
+}
+
 func (suite *VertexQueryBuilderTestSuite) TestFiltersMultiple() {
 	suite.queryBuilder.SetLabel([]string{"Label1"})
 	suite.queryBuilder.SetQueryMode(core.Write)

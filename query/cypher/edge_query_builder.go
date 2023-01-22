@@ -38,6 +38,7 @@ type EdgeQueryBuilder struct {
 	filters             core.KVMap
 	startVertexFilters  core.KVMap
 	endVertexFilters    core.KVMap
+	writeMode           core.WriteMode
 }
 
 func NewEdgeQueryBuilder() *EdgeQueryBuilder {
@@ -47,6 +48,7 @@ func NewEdgeQueryBuilder() *EdgeQueryBuilder {
 		endVertexSelector:   make(core.KVMap),
 		startVertexFilters:  make(core.KVMap),
 		endVertexFilters:    make(core.KVMap),
+		writeMode:           core.Merge,
 	}
 }
 
@@ -133,6 +135,11 @@ func (eqb *EdgeQueryBuilder) SetEndVertexFilters(filters core.KVMap) *EdgeQueryB
 	return eqb
 }
 
+func (eqb *EdgeQueryBuilder) SetWriteMode(writeMode core.WriteMode) *EdgeQueryBuilder {
+	eqb.writeMode = writeMode
+	return eqb
+}
+
 func (eqb *EdgeQueryBuilder) Build() (string, error) {
 
 	err := eqb.validate()
@@ -142,6 +149,9 @@ func (eqb *EdgeQueryBuilder) Build() (string, error) {
 	operation := "MATCH"
 	if eqb.queryMode == core.Write {
 		operation = "MERGE"
+		if eqb.writeMode == core.Create {
+			operation = "CREATE"
+		}
 	}
 
 	startVertexQueryFragment, startVertexVarName := eqb.buildVertexQueryFragment(eqb.startVertexVarName, eqb.startVertexLabels, eqb.startVertexSelector)
@@ -156,7 +166,7 @@ func (eqb *EdgeQueryBuilder) Build() (string, error) {
 	if eqb.edgeFetchMode == core.EdgeWithCompleteVertex {
 		returnFragment = fmt.Sprintf("return %s, %s, %s", startVertexVarName, edgeVarName, endVertexVarName)
 	}
-	return fmt.Sprintf("%s %s-[%s]-%s %s %s", operation, startVertexQueryFragment, edgeQueryFragment, endVertexQueryFragment, filters, returnFragment), nil
+	return fmt.Sprintf("%s %s-[%s]->%s %s %s", operation, startVertexQueryFragment, edgeQueryFragment, endVertexQueryFragment, filters, returnFragment), nil
 
 }
 

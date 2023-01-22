@@ -26,10 +26,11 @@ type VertexQueryBuilder struct {
 	varName   string
 	selector  core.KVMap
 	filters   core.KVMap
+	writeMode core.WriteMode
 }
 
 func NewVertexQueryBuilder() *VertexQueryBuilder {
-	return &VertexQueryBuilder{selector: core.KVMap{}, filters: core.KVMap{}}
+	return &VertexQueryBuilder{selector: core.KVMap{}, filters: core.KVMap{}, writeMode: core.Merge}
 }
 
 func (vqb *VertexQueryBuilder) SetQueryMode(mode core.QueryMode) *VertexQueryBuilder {
@@ -62,6 +63,11 @@ func (vqb *VertexQueryBuilder) SetFilters(filters core.KVMap) *VertexQueryBuilde
 	return vqb
 }
 
+func (vqb *VertexQueryBuilder) SetWriteMode(writeMode core.WriteMode) *VertexQueryBuilder {
+	vqb.writeMode = writeMode
+	return vqb
+}
+
 func (vqb *VertexQueryBuilder) Build() (string, error) {
 
 	err := vqb.validate()
@@ -69,8 +75,12 @@ func (vqb *VertexQueryBuilder) Build() (string, error) {
 		return "", err
 	}
 	operation := "MATCH"
+
 	if vqb.queryMode == core.Write {
 		operation = "MERGE"
+		if vqb.writeMode == core.Create {
+			operation = "CREATE"
+		}
 	}
 
 	variableName := strings.ToLower(vqb.labels[0])[0:2]

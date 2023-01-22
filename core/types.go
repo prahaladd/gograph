@@ -59,6 +59,13 @@ const (
 	EdgeWithCompleteVertex
 )
 
+type WriteMode int8
+
+const (
+	Merge WriteMode = iota
+	Create
+)
+
 // QueryOptions is used to control the aspects of building and routing the final cypher query to be sent to the graph db.
 type QueryOptions struct {
 	options KVMap
