@@ -225,6 +225,37 @@ func (suite *MapperTestSuite) TestPlayReflection() {
 	}
 }
 
+func (suite *MapperTestSuite) TestMapComplexStructToVertex() {
+	suite.mapper = NewReflectionMapper()
+	ts := nested{Field1: "Hello World", Field2: int32(8), ComplexField: tuple{Field1: "Tom and Jerry", Field2: 15}}
+	v, err := suite.mapper.ToVertex(ts, []string{})
+	suite.NoError(err)
+	t, ok := v.Properties["ComplexField"]
+	suite.True(ok)
+	_, ok = t.(tuple)
+	suite.True(ok)
+
+}
+
+func (suite *MapperTestSuite) TestMapVertexToComplexStruct() {
+	suite.mapper = NewReflectionMapper()
+	ts := nested{Field1: "Hello World", Field2: int32(8), ComplexField: tuple{Field1: "Tom and Jerry", Field2: 15}}
+	v, err := suite.mapper.ToVertex(ts, []string{})
+	suite.NoError(err)
+	t, ok := v.Properties["ComplexField"]
+	suite.True(ok)
+	_, ok = t.(tuple)
+	suite.True(ok)
+
+	// perform a reverse mapper
+	var n nested
+	err = suite.mapper.FromVertex(v, &n)
+	suite.NoError(err)
+
+	suite.Equal(ts, n)
+
+}
+
 func TestMapperTestSuite(t *testing.T) {
 	suite.Run(t, new(MapperTestSuite))
 }
@@ -246,4 +277,15 @@ type testVertex struct {
 
 type testEdge struct {
 	Field1 string
+}
+
+type tuple struct {
+	Field1 string
+	Field2 int32
+}
+
+type nested struct {
+	Field1       string
+	Field2       int32
+	ComplexField tuple
 }
